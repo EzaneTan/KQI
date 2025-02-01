@@ -1,0 +1,66 @@
+name: Deploy KQI Platform
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/prod.txt
+
+      - name: Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          exit-code: 1
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Tests
+        run: |
+          pytest tests/unit
+          pytest tests/integration
+
+      - name: Build and Push Docker Image
+        if: success()
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker build -t kqi-platform:latest .
+          docker tag kqi-platform:latest ${{ secrets.DOCKER_REPO }}/kqi-platform:latest
+          docker push ${{ secrets.DOCKER_REPO }}/kqi-platform:latest
+
+      - name: Deploy to Kubernetes
+        if: success()
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl rollout status deployment/kqi-platform
+
+      - name: Notify Deployment Success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "KQI Platform successfully deployed! 🚀"
+
+      - name: Notify Deployment Failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "KQI Platform deployment failed. 🔴"
