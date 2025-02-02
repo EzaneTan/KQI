@@ -1,6 +1,6 @@
 # KQI Platform - AI-Powered DeFi Agents 🤖💸
 
-![GITHUB_3](https://github.com/user-attachments/assets/abeef307-4dfc-40ad-8c11-c9d4ccf7e538)
+![GITHUB_4](https://github.com/user-attachments/assets/ede7a6a2-9a43-4544-a94e-4c6869e56d74)
 
 Welcome to **KQI Platform**, the next-generation **AI-powered DeFi agent framework**! Our mission is to make advanced trading strategies accessible to everyone by leveraging **autonomous AI agents**. Build, train, and deploy sophisticated **DeFi trading agents** with ease. 🎯
 
