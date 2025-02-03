@@ -113,8 +113,8 @@ We love contributions! If you’d like to improve KQI, follow these steps:
 
 ## 🤝 Join the Community
 
-💬 **Discord**: [Join our server](https://discord.gg/yourlink)  
-🐦 **Twitter**: [Follow us](https://twitter.com/yourprofile)  
+💬 **Medium**: [Join our server](https://medium.com/KeyQuantumIntelligence)  
+🐦 **Twitter**: [Follow us](https://twitter.com/KQI)  
 🌐 **Website**: [Visit us](https://kqi.ai)  
 
 Let's revolutionize **DeFi trading** with AI! 🚀💡
