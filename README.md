@@ -113,7 +113,7 @@ We love contributions! If you’d like to improve KQI, follow these steps:
 
 ## 🤝 Join the Community
 
-💬 **Medium**: [Join our server](https://medium.com/KeyQuantumIntelligence)  
+💬 **Medium**: [Learn More]([https://medium.com/KeyQuantumIntelligence])  
 🐦 **Twitter**: [Follow us](https://twitter.com/KQI)  
 🌐 **Website**: [Visit us](https://kqi.ai)  
 
