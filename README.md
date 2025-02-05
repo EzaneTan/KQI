@@ -114,7 +114,7 @@ We love contributions! If you’d like to improve KQI, follow these steps:
 ## 🤝 Join the Community
 
 🐦 **Twitter**: [Follow us](https://twitter.com/KQI)  
-🌐 **Website**: [Visit us](https://kqi.ai)  
+🌐 **Website**: [Visit us](https://kqi.io)  
 
 Let's revolutionize **DeFi trading** with AI! 🚀💡
 
