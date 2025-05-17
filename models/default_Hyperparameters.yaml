@@ -1,0 +1,31 @@
+# Default hyperparameters for each model in KQI
+risk_model:
+  # Maximum drawdown (as fraction of starting equity) before triggering halt
+  max_drawdown_threshold: 0.2      
+  # Stop-loss per trade (as fraction of entry price)
+  stop_loss_pct: 0.05              
+
+strategy_model:
+  # Learning rate for optimizer
+  learning_rate: 0.001             
+  # Batch size for training
+  batch_size: 64                   
+  # Number of training epochs
+  num_epochs: 100                  
+  # Network architecture
+  network:
+    - type: Dense
+      units: 128
+      activation: relu
+    - type: Dense
+      units: 64
+      activation: relu
+    - type: Dense
+      units: 1
+      activation: linear
+
+trade_model:
+  # Maximum slippage tolerated per trade
+  slippage_tolerance: 0.005        
+  # Max number of open positions at any time
+  max_open_positions: 5           
