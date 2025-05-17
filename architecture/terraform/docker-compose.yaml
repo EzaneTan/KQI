@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: kqi
+      POSTGRES_USER: kqi
+      POSTGRES_PASSWORD: secret
+  redis:
+    image: redis:7
+  mock-exchange:
+    build: ../mocks/exchange
+    ports:
+      - "8080:8080"
