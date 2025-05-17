@@ -1,52 +1,31 @@
-#!/bin/bash
+KQI/security/deploy.sh
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Deploy Agent Script for KQI Platform
-# Usage: ./deploy_agent.sh <config_file>
+# 1) Fetch secrets from Vault
+VAULT_ADDR=${VAULT_ADDR:-'http://127.0.0.1:8200'}
+VAULT_ROLE=${VAULT_ROLE:-'kqi-deployer'}
+VAULT_SECRET_PATH="secret/data/kqi/deployer"
+echo "🔐 Authenticating to Vault..."
+VAULT_TOKEN=$(vault login -method=approle -role="$VAULT_ROLE" -field=token)
+API_KEY=$(vault kv get -field=api_key "$VAULT_SECRET_PATH")
+WALLET_KEY=$(vault kv get -field=wallet_key "$VAULT_SECRET_PATH")
 
-# Check if the configuration file is provided
-if [ -z "$1" ]; then
-  echo "Error: No configuration file provided."
-  echo "Usage: ./deploy_agent.sh <config_file>"
+export KQI_API_KEY="$API_KEY"
+export KQI_WALLET_KEY="$WALLET_KEY"
+
+# 2) OPA policy check
+echo "🛡️ Running OPA policy guard..."
+echo "{\"user_role\": \"${USER_ROLE:-operator}\", \"action\": \"deploy\"}" > /tmp/opa_input.json
+if ! opa eval --data policies/permissions.rego --input /tmp/opa_input.json "data.kqi.security.allow" -q | grep -q "true"; then
+  echo "❌ Deployment blocked by policy."
   exit 1
 fi
 
-CONFIG_FILE=$1
+# 3) Perform deployment
+echo "🚀 Deploying KQI platform..."
+kubectl apply -f ../k8s/deployment.yaml
+kubectl rollout status deployment/kqi-platform
 
-# Validate the configuration file
-if [ ! -f "$CONFIG_FILE" ]; then
-  echo "Error: Configuration file '$CONFIG_FILE' not found."
-  exit 1
-fi
-
-# Load configuration
-echo "Loading configuration from $CONFIG_FILE..."
-AGENT_NAME=$(yq e '.agent.name' "$CONFIG_FILE")
-STRATEGY=$(yq e '.agent.strategy' "$CONFIG_FILE")
-RISK_LEVEL=$(yq e '.agent.risk_level' "$CONFIG_FILE")
-PROTOCOLS=$(yq e '.agent.protocols[]' "$CONFIG_FILE" | tr '\n' ', ' | sed 's/, $//')
-API_KEY=$(yq e '.api.key' "$CONFIG_FILE")
-
-# Validate required fields
-if [ -z "$AGENT_NAME" ] || [ -z "$STRATEGY" ] || [ -z "$API_KEY" ]; then
-  echo "Error: Missing required fields in the configuration file."
-  exit 1
-fi
-
-# Print configuration summary
-echo "Agent Name: $AGENT_NAME"
-echo "Strategy: $STRATEGY"
-echo "Risk Level: $RISK_LEVEL"
-echo "Protocols: $PROTOCOLS"
-echo "API Key: ********"  # Do not print the actual API key
-
-# Deploy the agent
-echo "Deploying agent '$AGENT_NAME' with strategy '$STRATEGY'..."
-kqi agent deploy --config "$CONFIG_FILE"
-
-# Check deployment status
-if [ $? -eq 0 ]; then
-  echo "Agent '$AGENT_NAME' deployed successfully!"
-else
-  echo "Error: Failed to deploy agent '$AGENT_NAME'."
-  exit 1
-fi
+echo "✅ Deployment complete!"
