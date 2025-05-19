@@ -1,31 +1,41 @@
 import mlflow
-
-from pathlib import Path
 import yaml
+from pathlib import Path
 
 # Load config
-cfg = yaml.safe_load(Path(__file__).parent / "config.yaml")["mlflow"]
-mlflow.set_tracking_uri(cfg["tracking_uri"])
+_cfg_path = Path(__file__).parent / "config.yaml"
+_cfg = yaml.safe_load(_cfg_path)["mlflow"]
+
+mlflow.set_tracking_uri(_cfg["tracking_uri"])
 
 class MLflowClientWrapper:
     def __init__(self):
-        self.client = mlflow.tracking.MlflowClient(registry_uri=cfg["registry_uri"])
+        self.client = mlflow.tracking.MlflowClient(registry_uri=_cfg["registry_uri"])
+        # ensure experiment exists
+        self.experiment_id = mlflow.set_experiment(_cfg["experiment_name"]).experiment_id
 
     def start_run(self, **kwargs):
-        return mlflow.start_run(**kwargs)
+        return mlflow.start_run(experiment_id=self.experiment_id, **kwargs)
 
     def log_params(self, params: dict):
         mlflow.log_params(params)
 
-    def log_metrics(self, metrics: dict, step=None):
-        mlflow.log_metrics(metrics, step=step)
+    def log_metrics(self, metrics: dict, step: int = None):
+        for k, v in metrics.items():
+            mlflow.log_metric(k, v, step=step)
 
-    def log_model(self, model, artifact_path: str):
-        mlflow.sklearn.log_model(model, artifact_path)
+    def log_model(self, model, artifact_path: str = "model"):
+        # automatically pick correct flavor if sklearn-like
+        mlflow.sklearn.log_model(model, artifact_path=artifact_path)
 
-    def register_model(self, run_id: str, name: str):
-        return self.client.create_registered_model(name) \
-            if name not in [m.name for m in self.client.list_registered_models()] \
-            else None, \
-            self.client.create_model_version(name, f"runs:/{run_id}/{artifact_path}")
-    # …and any other thin MLflow API wrappers you need
+    def register_model(self, run_id: str, artifact_path: str, model_name: str):
+        """Registers the model output of a run as a new Model Version."""
+        source = f"runs:/{run_id}/{artifact_path}"
+        # create model (if not exists)
+        try:
+            self.client.create_registered_model(model_name)
+        except mlflow.exceptions.RestException:
+            # already exists
+            pass
+        mv = self.client.create_model_version(name=model_name, source=source, run_id=run_id)
+        return mv
